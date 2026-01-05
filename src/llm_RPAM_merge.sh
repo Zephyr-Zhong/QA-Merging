@@ -12,11 +12,11 @@ python ./merge_sequential_llm.py 	--val_shot 64 \
 									--batch_size 16 \
 									--do_contrastive \
 									--lr 0.001 \
-									--epochs 50 \
+									--epochs 100 \
 									--do_short_cot \
 									--do_long_cot \
 									--language_model_name Qwen3-4B-Thinking-2507 \
 									--tokenizer_model_name Qwen3-4B-Thinking-2507 \
-									--save_path RPAM_cl_w_10000_MI_0.5
+									--save_path RPAM_cl_w_1000_MI_0.5
 
 

@@ -190,7 +190,7 @@ def train(args, lr, epochs, merged_train_loader):
                 if args.do_contrastive:
                     mse_loss = F.mse_loss(feature, true_feature, reduction='none').sum()
                     cl_loss = contrastive_loss_token(feature, true_feature, false_feature, temperature=0.1)
-                    loss = mse_loss + (10000 * cl_loss)
+                    loss = mse_loss + (1000 * cl_loss)
                 else:
                     loss = F.mse_loss(feature, true_feature, reduction='none').sum()
                 

@@ -29,14 +29,16 @@ task_model_mapping_dict = {
     "long_cot": "Qwen3-4B-Thinking-2507",
 }
 
-# finetuned_models = ["Qwen2.5-Math-1.5B", "Qwen2.5-Coder-1.5B-Instruct"]
+# finetuned model: backbone/pretrained model
+finetuned_model_backbone_mapping_dict = {}
+
+# finetuned_models = ["Qwen2.5-Math-1.5B", "DeepSeek-R1-Distill-Qwen-1.5B"]
 finetuned_models = ["Qwen3-4B-Thinking-2507", "Qwen3-4B-Instruct-2507"]
 
 
 parser = argparse.ArgumentParser("Interface for merging LLMs")
 parser.add_argument("--do_long_cot", action="store_true", help="whether to merge long reasoning model")
 parser.add_argument("--do_short_cot", action="store_true", help="whether to merge short reasoning model")
-parser.add_argument("--do_code", action="store_true", help="whether to merge code model")
 parser.add_argument("--language_model_name", type=str,
                     default="Llama-2-13b-hf_32001", help="name of the language model")
 parser.add_argument("--merging_method_name", type=str,
@@ -95,12 +97,12 @@ logger.setLevel(logging.DEBUG)
 
 
 def train(args, lr, epochs, merged_train_loader):
-    # ================= Change the number of layers based on model
+    # ================= Change the number of layers based on model =================
     num_layers = 36
 
     check_gpu()
 
-    # ================= Change intialized merged ratio here
+    # ================= Change intialized merged ratio here =================
     init_merge_coef = 0.5
     avg_pre_merged_model = load_avg_merged_model_pre_llm(args, merge_coef=init_merge_coef)
 
@@ -232,8 +234,6 @@ if __name__ == "__main__":
         args.dataset_names.append("short_cot")
     if args.do_long_cot:
         args.dataset_names.append("long_cot")
-    if args.do_code:
-        args.dataset_names.append("code")
     args.dataset_name_combined = "_".join(args.dataset_names)
     args.cache_dir = cache_dir
     args.task_model_mapping_dict = task_model_mapping_dict

@@ -22,7 +22,7 @@ MODEL_NAME_OR_PATH="MERGED_MODEL_PATH"
 # MODEL_NAME_FOR_SAVE="Qwen3-4B-Thinking-2507"
 # MODEL_NAME_FOR_SAVE="Qwen3-4B-Instruct-2507"
 # == RPAM
-MODEL_NAME_FOR_SAVE=qwen3_RPAM/contrastive_w_10000_MI_0.5/50-0.001-64-16
+MODEL_NAME_FOR_SAVE=qwen3_RPAM/contrastive_w_1000_MI_0.5/50-0.001-64-16
 # ==========================================================
 
 

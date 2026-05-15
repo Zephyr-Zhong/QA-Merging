@@ -5,7 +5,7 @@ see in environment.yaml
 The processed data is in ./src/math_code_data
 
 ## Base Models
-Downloading base models from Huggingface: Qwen/Qwen3-4B-Thinking-2507, Qwen/Qwen3-4B-Instruct-2507
+Downloading base models from Huggingface.
 
 ## Preprocess Base Models
 Run

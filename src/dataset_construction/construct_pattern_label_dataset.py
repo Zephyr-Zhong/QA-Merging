@@ -1,4 +1,5 @@
 import random
+from tqdm import tqdm
 from transformers import AutoTokenizer
 import numpy as np
 import random
@@ -10,25 +11,48 @@ import pandas as pd
 
 random.seed(0)
 
+
+import numpy as np
+
+
+def pick_shortest_correct_response(responses, correctness, solution_lengths):
+    # Filter out the correct responses and their corresponding lengths
+    correct_responses = [(resp, length) for resp, corr, length in zip(responses, correctness, solution_lengths) if corr == 1]
     
-def construct_pairwise_json_data(data):
+    if not correct_responses:
+        assert False, "No correct responses available"
+    
+    # Find the shortest correct response
+    shortest_response = min(correct_responses, key=lambda x: x[1])
+
+    # return the response text of the shortest correct response
+    return shortest_response[0] 
+
+
+    
+# Construct PL dataset in Long-CoT and Short-CoT based on threshold and training samples
+def construct_pairwise_json_data(data, gain_threshold, data_size):
     long_cot_samples = []
     short_cot_samples = []
+    L2S_samples = []
 
     for item in data:
         gain = item['gain']
         item.pop('gain')
-        print(gain)
         if gain <= 0:
+            # chosen model: short_cot
             short_cot_samples.append(item)
-        elif gain > 0:
+        elif gain > gain_threshold:
+            # chosen model: long_cot
             long_cot_samples.append(item)
         else:
             assert False, "gain should not be zero"
 
     print(f"Short CoT samples: {len(short_cot_samples)}, Percent: {len(short_cot_samples)/len(data)*100:.2f}%")
     print(f"Long CoT samples: {len(long_cot_samples)}, Percent: {len(long_cot_samples)/len(data)*100:.2f}%")
+    print(f"L2S samples: {len(L2S_samples)}, Percent: {len(L2S_samples)/len(data)*100:.2f}%")
     print("-"*20)
+
     return short_cot_samples, long_cot_samples
 
 def save_to_jsonl(data, output_path):
@@ -36,26 +60,38 @@ def save_to_jsonl(data, output_path):
     # save dataframe as jsonl
     df.to_json(output_path, orient='records', lines=True)
 
+
 if __name__ == "__main__":
-    model_path = "YOUR MODEL PATH HERE"
+    model = "qwen25" # "qwen25" OR "qwen3"
+    gain_threshold = 0
+    save_dataset = True
+    
+
+    if model == "qwen25":
+        model_path = "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B"
+        long_cot_data_path = "./propressed_data/DeepSeek-R1/mix_mathematic_problems.json"
+        short_cot_data_path = "./propressed_data/Qwen2.5-Math-1.5B/mix_mathematic_problems.json"
+        save_folder = "./propressed_data/qwen25_labeled/"
+    elif model == "qwen3":  
+        model_path = "Qwen/Qwen3-4B-Thinking-2507"
+        long_cot_data_path = "./propressed_data/Qwen3-4B-Thinking-2507/mix_mathematic_problems.json"
+        short_cot_data_path = "./propressed_data/Qwen3-4B-Instruct-2507/mix_mathematic_problems.json"
+        save_folder = "./propressed_data/qwen3_labeled/"
+    
     tokenizer = AutoTokenizer.from_pretrained(model_path)
-
-    long_cot_data_path = "./propressed_data/Qwen3-4B-Thinking-2507/mix_mathematic_problems.json"
-    short_cot_data_path = "./propressed_data/Qwen3-4B-Instruct-2507/mix_mathematic_problems.json"
-
     long_cot_data = load_eval_data(long_cot_data_path)
     short_cot_data = load_eval_data(short_cot_data_path)
 
     # default sampling 12 sampels for each problem
-    sampling_size = len(long_cot_data[0]['responses'])
+    sampling_size = len(long_cot_data[0]['pred'])
     print("sampling_size:", sampling_size)
-
     assert len(long_cot_data) == len(short_cot_data)
-
     print("num problems:",len(long_cot_data))
-    # sys.exit()
+
     negative = 0
-    postive = 0
+    positive = 0
+    negative_gain = []
+    positive_gain = []
 
     long_acc_random = 0
     short_acc_random = 0
@@ -72,8 +108,11 @@ if __name__ == "__main__":
     total_acc_short = 0
     total_length_short = 0
 
-    total_acc_optimal = 0
-    total_length_optimal = 0
+    total_acc_optimal_long = 0
+    total_length_optimal_long = 0
+
+    total_acc_optimal_short = 0
+    total_length_optimal_short = 0
 
     max_length_inc_ratio = 10
 
@@ -81,30 +120,15 @@ if __name__ == "__main__":
     long_lengths = []
     accuracy_diffs = []
 
-    for group_index in range(len(long_cot_data)):
-    # for group_index in range(50):
-
+    for group_index in tqdm(range(len(long_cot_data))):
         long_group = long_cot_data[group_index]
         short_group = short_cot_data[group_index]
-        print(long_group.keys())
-
-        # calculate correctness
-        ground_truth_answer = long_group['gt']
-        
-        # skip multiple choice questions
-        if ground_truth_answer in ["A", "B", "C", "D", "E", "F", "\\text{A}", "\\text{B}", "\\text{C}", "\\text{D}", "\\text{E}", "\\text{F}","\\boxed{A}", "\\boxed{B}", "\\boxed{C}", "\\boxed{D}", "\\boxed{E}", "\\boxed{F}"]:
-            continue
-        if ground_truth_answer =="None" or ground_truth_answer == "":
-            continue
 
         long_answers = long_group['pred']
         short_answers = short_group['pred']
 
         long_correctness = long_group['score']
         short_correctness = short_group['score']
-
-        long_acc_random += long_correctness[0]
-        short_acc_random += short_correctness[0]
 
         # calculate lengths
         long_solutions = [solution for solution in long_group['responses']]
@@ -122,14 +146,16 @@ if __name__ == "__main__":
         
         relative_accuracy_gain = long_accuracy - short_accuracy - 1/(2*sampling_size) #/ short_accuracy if short_accuracy != 0 else (long_accuracy - 1/sampling_size) / (1/sampling_size)
         relative_length_increnment = (long_avg_length - short_avg_length) / short_avg_length
-        
+
         if relative_accuracy_gain > 0:
             gain = relative_accuracy_gain / relative_length_increnment
         else:
             gain = relative_accuracy_gain * (relative_length_increnment/max_length_inc_ratio)
 
         # a special case
-        if long_accuracy == 0 and short_accuracy == 0:
+        if long_accuracy == 0 or short_accuracy == 0:
+            continue
+        if short_avg_length > long_avg_length:
             continue
         
         valid_count += 1
@@ -149,59 +175,36 @@ if __name__ == "__main__":
         total_acc_short += short_correctness[0]
         total_length_short += short_solution_lengths[0]
 
-        if gain > 0:
-            postive += 1
-            total_acc_optimal += long_correctness[0]
-            total_length_optimal += long_solution_lengths[0]
-
-        if gain <= 0:
+        if gain > gain_threshold:
+            positive += 1
+            positive_gain.append(gain)
+            total_acc_optimal_long += long_correctness[0]
+            total_length_optimal_long += long_solution_lengths[0]
+        else:
+            # gain <= gain_threshold
             negative += 1
-            total_acc_optimal += short_correctness[0]
-            total_length_optimal += short_solution_lengths[0]
-            
+            negative_gain.append(gain)
+            total_acc_optimal_short += short_correctness[0]
+            total_length_optimal_short += short_solution_lengths[0]
+        
+        best_response_short = pick_shortest_correct_response(short_solutions, short_correctness, short_solution_lengths)
+        best_response_long = pick_shortest_correct_response(long_solutions, long_correctness, long_solution_lengths)
 
         all_gain.append(gain)
         selected_data.append({
             "instruction": long_group['question'],
             "output": long_group['gt_cot'],
-            "gain": gain
+            "gain": gain,
+            "best_response_long": best_response_long,
+            "best_response_short": best_response_short
         })
 
-        
-        if long_avg_length > 4000 and gain < 0:
-            print("Problem Index:", group_index)
-            print("long_accuracy:",long_accuracy)
-            print("short_accuracy:",short_accuracy)
-            print("long_avg_length:",long_avg_length)
-            print("short_avg_length:",short_avg_length)
-            print("relative_accuracy_gain:",relative_accuracy_gain)
-            print("relative_length_increnment:",relative_length_increnment)
-            print("gain:",gain)
-            print("-"*20)
 
+    short_cot_samples, long_cot_samples = construct_pairwise_json_data(selected_data, gain_threshold, 64)
 
-    print("acc_counters:", [a / valid_count for a in acc_counters])
-
-    np.set_printoptions(suppress=True)
-    gain_avg = sum(all_gain) / len(all_gain)
-    gain_abs_avg = sum([e if e>=0 else -e for e in all_gain]) / len(all_gain)
-    print("gain_avg:", gain_avg)
-    print("gain abs avg:", gain_abs_avg)
-    print("gain max:", max(all_gain))
-    print("gain min:", min(all_gain))
-
-    print("[-] negative counts:", negative, "\n[+] postive counts:", postive)
-    print("[-] negative gain:",negative / (valid_count))
-    print("[+] postive gain:",postive / (valid_count))
-
-    print("total_acc_long:", total_acc_long / valid_count, "total_length_long:", total_length_long / valid_count)
-    print("total_acc_short:", total_acc_short / valid_count, "total_length_short:", total_length_short / valid_count)
-    print("total_acc_optimal:", total_acc_optimal / valid_count, "total_length_optimal:", total_length_optimal / valid_count)
-
-    # preference models dataset
-    long_cot_output_path = "./propressed_data/long_cot_math.jsonl"
-    short_cot_output_path = "./propressed_data/short_cot_math.jsonl"
-    short_cot_samples, long_cot_samples = construct_pairwise_json_data(selected_data)
-
-    save_to_jsonl(short_cot_samples, short_cot_output_path)
-    save_to_jsonl(long_cot_samples, long_cot_output_path)
+    # save dataset
+    if save_dataset:
+        long_cot_output_path = save_folder + "long_cot_math_"+str(gain_threshold)+"_response_2.jsonl"
+        short_cot_output_path = save_folder + "short_cot_math_"+str(gain_threshold)+"_response_2.jsonl"
+        save_to_jsonl(short_cot_samples, short_cot_output_path)
+        save_to_jsonl(long_cot_samples, long_cot_output_path)

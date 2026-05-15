@@ -5,7 +5,7 @@ import os
 import json
 import torch
 import torch.nn as nn
-from transformers import AutoModelForCausalLM
+from transformers import AutoModelForSequenceClassification, AutoModelForCausalLM
 from torch.utils.data import Dataset, DataLoader
 
 compute_dtype = torch.bfloat16
@@ -68,13 +68,14 @@ def del_ex(model, exclude):
 
 
 class MergedModel(nn.Module):
-    def __init__(self, pretrained_model, models, granularity):
+    def __init__(self, pretrained_model, models, granularity, init_merge_weight):
         super(MergedModel, self).__init__()
         self.pretrained_model = pretrained_model
+        # self.models = copy.deepcopy(models)
         self.models = models
         self.granularity = granularity
-        # =============== Change intialized merged ratio here
-        self.init_merge_weights = 0.5
+        # change intialized merged ratio here
+        self.init_merge_weights = init_merge_weight
 
         for param in self.pretrained_model.parameters():
             param.requires_grad = False
@@ -257,6 +258,8 @@ def transform_data_loader_prelayer(data_loader, model, device, num_workers=0, sh
             x = data['data'][0].to(device)
             source_loader = data['source_loader']
 
+            # output[0] is the input of the first layer, with shape [batch_size, seq_length, embedding_dim]
+            # output[1] is attention mask, with shape [batch_size, 1, seq_length, seq_length]
             output = model(x)
 
             # batchsize = 1
@@ -287,6 +290,13 @@ def load_pretrained_model(args):
                                                                                                     trust_remote_code=True,
                                                                                                     torch_dtype=compute_dtype)
         remove_grad(pretrained_model)
+    else:
+        try:
+            pretrained_model = AutoModelForSequenceClassification.from_pretrained(
+                pretrained_model_name_or_path=os.path.join(args.cache_dir, args.language_model_name)).to(args.device)
+        except:
+            pretrained_model = AutoModelForSequenceClassification.from_pretrained(
+                pretrained_model_name_or_path=args.language_model_name, cache_dir=args.cache_dir).to(args.device)
 
     return pretrained_model
 
@@ -295,10 +305,14 @@ def load_fine_tuned_model(args, dataset_name):
     if 'Llama' in args.language_model_name or "Qwen" in args.language_model_name:
         model = AutoModelForCausalLM.from_pretrained(
             pretrained_model_name_or_path=os.path.join(os.path.join(args.cache_dir, args.load_model_paths_dict[dataset_name]), args.llm_version), 
+            # pretrained_model_name_or_path=os.path.join(os.path.join(args.cache_dir, args.language_model_name), args.llm_version), 
                                                                                                 device_map=args.device,
                                                                                                 trust_remote_code=True,
                                                                                                 torch_dtype=compute_dtype)
         remove_grad(model)
+    else:
+        model = AutoModelForSequenceClassification.from_pretrained(
+            pretrained_model_name_or_path=args.load_model_paths_dict[dataset_name]).to(args.device)
     return model
 
 
@@ -326,16 +340,18 @@ def load_merged_layers_llm(args, layer_idx):
         layers.append(layer)
 
     merged_layers = MergedModel(layer_pretrained, layers, 'elementwise')
+
+    # original Code
     return merged_layers, layers
 
 
 # load models and merge them with merge_coef, return a initialized merged model for restore merged weights in trained layers
-def load_avg_merged_model_llm(args, merge_coef=0.5):
+def load_avg_merged_model_llm(args, merge_coef=0.2):
     pre_model = load_pretrained_model(args)
 
     modules = ['model.embed_tokens.', 'model.norm.', 'lm_head.']
 
-    num_layers = 36 # number of layers in model
+    num_layers = 28 # number of layers in model. Qwen3-4B=36, qwen2.5=28
     for i in range(num_layers):
         modules.append(f'model.layers.{i}.')
 
@@ -349,10 +365,10 @@ def load_avg_merged_model_llm(args, merge_coef=0.5):
             # for dataset in args.dataset_names:
             dataset = args.dataset_names[0]  # only merge one model in dataset
             model = load_part_model(args, mod[:-1], args.task_model_mapping_dict[dataset])
-
             value += (dict(model.named_parameters())[name[len(mod):]] - dict(pre_model.named_parameters())[name]) * merge_coef
             del model
             torch.cuda.empty_cache()
+
             set_attr(pre_model, name.split('.'), nn.Parameter(value, requires_grad=False))
             del value
 
@@ -455,7 +471,6 @@ def transform_data_loader_layer_pertask_llm(data_loader, merged_model, models, d
 
             inputs = []
 
-            # output = merged_model(x[0], pre_causal_mask[0], pre_position_ids[0])[0]
             output = merged_model(
                     x[0], 
                     attention_mask=pre_causal_mask[0], 
@@ -463,6 +478,7 @@ def transform_data_loader_layer_pertask_llm(data_loader, merged_model, models, d
                     position_embeddings=pre_position_embeddings[0])[0]
             inputs.append(output)
             idx = source_loader.item()
+
             for model in models:
                 output = model(
                             x[idx+1], 
@@ -486,3 +502,22 @@ def transform_data_loader_layer_pertask_llm(data_loader, merged_model, models, d
                                 num_workers=0)
 
     return new_dataloader
+
+
+def check_model_same(model1, model2):
+    for (name1, param1), (name2, param2) in zip(model1.named_parameters(), model2.named_parameters()):
+        param1 = param1.cuda()
+        param2 = param2.cuda()
+        if name1 != name2:
+            print(f"Parameter name mismatch: {name1} vs {name2}")
+            return False
+        if not torch.equal(param1, param2):
+            print(name1)
+            print(torch.norm(param1 - param2))
+            print(torch.norm(param1))
+            print(torch.norm(param2))
+            print(f"Parameter value mismatch: {name1}")
+            return False
+        param1 = param1.cpu()
+        param2 = param2.cpu()
+    return True

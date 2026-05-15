@@ -1,5 +1,8 @@
 import numpy as np
+import json
 import pandas as pd
+
+# os.environ['HF_DATASETS_OFFLINE'] = '1'
 
 from torch.utils.data import Subset
 import datasets
@@ -9,34 +12,30 @@ from utils.prompt_construct_utils import *
 class LLMDataLoader:
     def __init__(self, tokenizer: transformers.AutoTokenizer):
         self.tokenizer = tokenizer
-        self.math500_path = "math_code_data/MATH_train.jsonl"
-        self.gsm8k_path = "math_code_data/gsm8k_test.jsonl"
-        self.long_cot_path = "math_code_data/long_cot_math.jsonl"
-        self.short_cot_path = "math_code_data/short_cot_math.jsonl"
-        self.max_len = 0
+        self.long_cot_path = "math_code_data/qwen25_labeled/long_cot_math_response.jsonl"
+        self.short_cot_path = "math_code_data/qwen25_labeled/short_cot_math_response.jsonl"
+        self.max_len = 1024
 
     def encode(self, examples: dict, max_seq_length: int = 1024):
         inputs = {}
         ins_token = self.tokenizer(examples['instruction'], max_length=max_seq_length, padding="max_length", truncation=True, return_tensors="pt")
         inputs['input_ids'] = ins_token['input_ids']
         inputs['attention_mask'] = ins_token['attention_mask']
-        self.max_len = max(self.max_len, inputs['attention_mask'][0].sum().item())   
+        self.max_len = max(self.max_len, inputs['attention_mask'][0].sum().item())
         return inputs
         
-    def load_dataset(self, dataset_name: str, max_seq_length: int = 1024, val_shot: int = 64):
+    def load_dataset(self, dataset_name: str, max_seq_length: int = 256, val_shot: int = 64):
         # train: 64, other is test
         if dataset_name == "long_cot":
-
+            # long cot math
             math_data = pd.read_json(self.long_cot_path, lines=True)
             data_df = math_data[['instruction', 'output']]
 
-            data_df['instruction'] = data_df['instruction'].apply(lambda x: get_math_task_prompt_thinking().format(instruction=x))
+            # use get_math_task_prompt
+            data_df['instruction'] = data_df['instruction'].apply(lambda x: get_qwen25_math_task_prompt_thinking().format(instruction=x))
         elif dataset_name == "short_cot":
-
-            math_data = pd.read_json(self.short_cot_path, lines=True)
-            data_df = math_data[['instruction', 'output']]
-
-            data_df['instruction'] = data_df['instruction'].apply(lambda x: get_math_task_prompt_nothink().format(instruction=x))
+            # use get_math_task_prompt
+            data_df['instruction'] = data_df['instruction'].apply(lambda x: get_qwen25_math_task_prompt_nothink().format(instruction=x))
         else:
             raise ValueError(f"Unknown dataset {dataset_name}")
         

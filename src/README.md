@@ -35,5 +35,5 @@ in lib/python3.10/site-packages/transformers/models/qwen3/modeling_qwen3.py: Qwe
 ## Training
 Merging Long-CoT and Short-CoT:
 ```shell
-sh llm_RPAM_merge.sh
+sh qa_merge.sh
 ```

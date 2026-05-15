@@ -11,7 +11,7 @@ from torch import nn
 from torch.utils.data import DataLoader, Dataset, Subset
 from transformers import AutoModelForCausalLM, AutoTokenizer, PreTrainedTokenizerBase
 import logging
-from RPAM.src.representation_correct.interpolation_methods import linear_pareto_interpolation
+from src.representation_correct.interpolation_methods import linear_pareto_interpolation
 
 log = logging.getLogger(__name__)
 
@@ -648,14 +648,14 @@ def main():
         based_model = "qwen25"
         dataset_think_template = "r1-distilled-qwen"
         dataset_instruct_template = "r1-distilled-qwen"
-        long_json_path = "../../RPAM_dataset_construction/propressed_data/qwen25_labeled/long_cot_math_0_response_2.jsonl"
-        short_json_path = "../../RPAM_dataset_construction/propressed_data/qwen25_labeled/short_cot_math_0_response_2.jsonl"
+        long_json_path = "../../dataset_construction/propressed_data/qwen25_labeled/long_cot_math_0_response_2.jsonl"
+        short_json_path = "../../dataset_construction/propressed_data/qwen25_labeled/short_cot_math_0_response_2.jsonl"
     else:
         based_model = "qwen3"
         dataset_think_template = "qwen3-think"
         dataset_instruct_template = "qwen3-think"
-        long_json_path = "../../RPAM_dataset_construction/propressed_data/qwen3_labeled/long_cot_math_0_response.jsonl"
-        short_json_path = "../../RPAM_dataset_construction/propressed_data/qwen3_labeled/short_cot_math_0_response.jsonl"
+        long_json_path = "../../dataset_construction/propressed_data/qwen3_labeled/long_cot_math_0_response.jsonl"
+        short_json_path = "../../dataset_construction/propressed_data/qwen3_labeled/short_cot_math_0_response.jsonl"
 
 
     merged_model, tokenizer = load_causal_lm_and_tokenizer(merged_path)

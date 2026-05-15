@@ -12,8 +12,8 @@ from utils.prompt_construct_utils import *
 class LLMDataLoader:
     def __init__(self, tokenizer: transformers.AutoTokenizer):
         self.tokenizer = tokenizer
-        self.long_cot_path = "math_code_data/qwen25_labeled/long_cot_math_response.jsonl"
-        self.short_cot_path = "math_code_data/qwen25_labeled/short_cot_math_response.jsonl"
+        self.long_cot_path = "dataset_construction/propressed_data/qwen25_labeled/long_cot_math_response.jsonl"
+        self.short_cot_path = "dataset_construction/propressed_data/qwen25_labeled/short_cot_math_response.jsonl"
         self.max_len = 1024
 
     def encode(self, examples: dict, max_seq_length: int = 1024):
@@ -34,6 +34,10 @@ class LLMDataLoader:
             # use get_math_task_prompt
             data_df['instruction'] = data_df['instruction'].apply(lambda x: get_qwen25_math_task_prompt_thinking().format(instruction=x))
         elif dataset_name == "short_cot":
+            # short cot math
+            math_data = pd.read_json(self.short_cot_path, lines=True)
+            data_df = math_data[['instruction', 'output']]
+
             # use get_math_task_prompt
             data_df['instruction'] = data_df['instruction'].apply(lambda x: get_qwen25_math_task_prompt_nothink().format(instruction=x))
         else:

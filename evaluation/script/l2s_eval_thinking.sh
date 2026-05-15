@@ -22,7 +22,7 @@ MODEL_NAME_OR_PATH="MERGED_MODEL_PATH"
 # MODEL_NAME_FOR_SAVE="Qwen3-4B-Thinking-2507"
 # MODEL_NAME_FOR_SAVE="Qwen3-4B-Instruct-2507"
 # == RPAM
-MODEL_NAME_FOR_SAVE=qwen3_RPAM/contrastive_w_1000_MI_0.5/50-0.001-64-16
+MODEL_NAME_FOR_SAVE="SAVED_RESULT_PATH"
 # ==========================================================
 
 
@@ -37,7 +37,7 @@ NUM_SHOTS=0     # CoT few shots setting
 OUTPUT_DIR="./math_eval/${MODEL_NAME_FOR_SAVE}/"
 SPLIT="test"
 NUM_TEST_SAMPLE=-1
-MAX_NEW_TOKEN=32768
+MAX_NEW_TOKEN=10240
 # ==========================================================
 
 
@@ -45,7 +45,7 @@ MAX_NEW_TOKEN=32768
 # "gsm8k,math,minerva_math,gpqa_diamond,aime24,aime25"
 MAX_NEW_TOKEN=32768
 DATASETS="gsm8k,math,aime24"
-N_SAMPLING=1
+N_SAMPLING=3
 
 DATA_NAME=${DATASETS}
 TOKENIZERS_PARALLELISM=false \

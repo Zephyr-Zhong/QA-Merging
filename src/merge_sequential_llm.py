@@ -3,7 +3,7 @@ import json
 import math
 from utils.utils import set_random_seed
 from utils.customized_trainers import CustomizedTrainer
-from utils.llm_data_loader_qwen25 import LLMDataLoader
+from utils.llm_data_loader import LLMDataLoader
 from transformers import AutoTokenizer, TrainingArguments
 import torch
 import logging
@@ -26,22 +26,11 @@ os.environ["WANDB_DISABLED"] = "true"
 
 # dataset: finetuned model
 task_model_mapping_dict = {
-    # "math": "Qwen3-4B-Thinking-2507",
     "short_cot": "Qwen2.5-Math-1.5B",
     "long_cot": "DeepSeek-R1-Distill-Qwen-1.5B",
 }
 
-# finetuned model: backbone/pretrained model
-finetuned_model_backbone_mapping_dict = {
-    # "Qwen3-4B-Thinking-2507": "Qwen3-4B-Instruct-2507",
-    # "Qwen3-4B-Instruct-2507": "Qwen3-4B-Thinking-2507",
-    # "Qwen2.5-Math-1.5B": "DeepSeek-R1-Distill-Qwen-1.5B",
-    # "Qwen3-4B-Thinking-2507": "Qwen3-4B-Instruct-2507",
-    # "Qwen3-4B-Instruct-2507": "Qwen3-4B-Instruct-2507",
-}
-
 finetuned_models = ["Qwen2.5-Math-1.5B", "Qwen2.5-Coder-1.5B-Instruct"]
-# finetuned_models = ["Qwen3-4B-Thinking-2507", "Qwen3-4B-Instruct-2507"]
 
 
 parser = argparse.ArgumentParser("Interface for merging LLMs")

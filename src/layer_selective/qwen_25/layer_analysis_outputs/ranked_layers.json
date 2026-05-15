@@ -1,0 +1,142 @@
+[
+  {
+    "rank": 1,
+    "layer": 28,
+    "divergence_gain": 0.06103515625
+  },
+  {
+    "rank": 2,
+    "layer": 21,
+    "divergence_gain": 0.04638671875
+  },
+  {
+    "rank": 3,
+    "layer": 19,
+    "divergence_gain": 0.045166015625
+  },
+  {
+    "rank": 4,
+    "layer": 18,
+    "divergence_gain": 0.044677734375
+  },
+  {
+    "rank": 5,
+    "layer": 22,
+    "divergence_gain": 0.04296875
+  },
+  {
+    "rank": 6,
+    "layer": 23,
+    "divergence_gain": 0.04296875
+  },
+  {
+    "rank": 7,
+    "layer": 20,
+    "divergence_gain": 0.042724609375
+  },
+  {
+    "rank": 8,
+    "layer": 17,
+    "divergence_gain": 0.0419921875
+  },
+  {
+    "rank": 9,
+    "layer": 15,
+    "divergence_gain": 0.0400390625
+  },
+  {
+    "rank": 10,
+    "layer": 24,
+    "divergence_gain": 0.039794921875
+  },
+  {
+    "rank": 11,
+    "layer": 13,
+    "divergence_gain": 0.03955078125
+  },
+  {
+    "rank": 12,
+    "layer": 16,
+    "divergence_gain": 0.03955078125
+  },
+  {
+    "rank": 13,
+    "layer": 11,
+    "divergence_gain": 0.0390625
+  },
+  {
+    "rank": 14,
+    "layer": 12,
+    "divergence_gain": 0.03857421875
+  },
+  {
+    "rank": 15,
+    "layer": 14,
+    "divergence_gain": 0.037841796875
+  },
+  {
+    "rank": 16,
+    "layer": 10,
+    "divergence_gain": 0.03759765625
+  },
+  {
+    "rank": 17,
+    "layer": 5,
+    "divergence_gain": 0.037353515625
+  },
+  {
+    "rank": 18,
+    "layer": 9,
+    "divergence_gain": 0.037353515625
+  },
+  {
+    "rank": 19,
+    "layer": 25,
+    "divergence_gain": 0.037109375
+  },
+  {
+    "rank": 20,
+    "layer": 4,
+    "divergence_gain": 0.03662109375
+  },
+  {
+    "rank": 21,
+    "layer": 6,
+    "divergence_gain": 0.0361328125
+  },
+  {
+    "rank": 22,
+    "layer": 26,
+    "divergence_gain": 0.0361328125
+  },
+  {
+    "rank": 23,
+    "layer": 8,
+    "divergence_gain": 0.035888671875
+  },
+  {
+    "rank": 24,
+    "layer": 2,
+    "divergence_gain": 0.03564453125
+  },
+  {
+    "rank": 25,
+    "layer": 7,
+    "divergence_gain": 0.03564453125
+  },
+  {
+    "rank": 26,
+    "layer": 3,
+    "divergence_gain": 0.033447265625
+  },
+  {
+    "rank": 27,
+    "layer": 27,
+    "divergence_gain": 0.018798828125
+  },
+  {
+    "rank": 28,
+    "layer": 1,
+    "divergence_gain": 0.018310546875
+  }
+]

@@ -30,6 +30,10 @@ task_model_mapping_dict = {
     "long_cot": "DeepSeek-R1-Distill-Qwen-1.5B",
 }
 
+finetuned_model_backbone_mapping_dict = {
+    # "Qwen2.5-Math-1.5B": "DeepSeek-R1-Distill-Qwen-1.5B",
+}
+
 finetuned_models = ["Qwen2.5-Math-1.5B", "Qwen2.5-Coder-1.5B-Instruct"]
 
 

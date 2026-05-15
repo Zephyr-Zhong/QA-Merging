@@ -648,8 +648,8 @@ def main():
         based_model = "qwen25"
         dataset_think_template = "r1-distilled-qwen"
         dataset_instruct_template = "r1-distilled-qwen"
-        long_json_path = "../../dataset_construction/propressed_data/qwen25_labeled/long_cot_math_0_response_2.jsonl"
-        short_json_path = "../../dataset_construction/propressed_data/qwen25_labeled/short_cot_math_0_response_2.jsonl"
+        long_json_path = "../../dataset_construction/propressed_data/qwen25_labeled/long_cot_math_0_response.jsonl"
+        short_json_path = "../../dataset_construction/propressed_data/qwen25_labeled/short_cot_math_0_response.jsonl"
     else:
         based_model = "qwen3"
         dataset_think_template = "qwen3-think"

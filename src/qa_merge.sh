@@ -14,8 +14,8 @@ python ./merge_sequential_llm.py 	--val_shot 64 \
 									--init_merge_coef 0.5 \
 									--language_model_name DeepSeek-R1-Distill-Qwen-1.5B \
 									--tokenizer_model_name DeepSeek-R1-Distill-Qwen-1.5B \
-									--save_path contrastive_t_100_MI_0.5 \
-									--ranked_layers_json_path ./layers_analysis/qwen_25/layer_analysis_outputs_a_0.5_g_1_layer/ranked_layers.json
+									--save_path contrastive_t_100_MI_0.5_k_0.3 \
+									--ranked_layers_json_path ./layers_analysis/qwen_25/layer_analysis_outputs/ranked_layers.json
 
 
 

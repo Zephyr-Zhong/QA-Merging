@@ -204,7 +204,7 @@ if __name__ == "__main__":
 
     # save dataset
     if save_dataset:
-        long_cot_output_path = save_folder + "long_cot_math_"+str(gain_threshold)+"_response_2.jsonl"
-        short_cot_output_path = save_folder + "short_cot_math_"+str(gain_threshold)+"_response_2.jsonl"
+        long_cot_output_path = save_folder + "long_cot_math_"+str(gain_threshold)+"_response.jsonl"
+        short_cot_output_path = save_folder + "short_cot_math_"+str(gain_threshold)+"_response.jsonl"
         save_to_jsonl(short_cot_samples, short_cot_output_path)
         save_to_jsonl(long_cot_samples, long_cot_output_path)

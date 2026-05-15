@@ -1,9 +1,9 @@
 <!-- preview markdown: ctrl+shift+v -->
-# RPAM
+# QA-Merging
 
 **Instruction**
 
-This repository contains the code of the paper **QA-Merging: Query-Adaptive Reasoning via Layer Selective Model Merging** submitted to ACL.
+This repository contains the code of the paper **QA-Merging: Query-Adaptive Reasoning via Layer Selective Model Merging**.
 
 - The code for our merging method can be found in `src`.
 - The code for evaluation can be found in `evaluation/script`.
